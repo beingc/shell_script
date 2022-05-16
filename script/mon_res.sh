@@ -3,9 +3,11 @@
 # Desc: monitor host resource usage
 
 # Configuration
-TIME_INTERVAL=3
+TIME_INTERVAL=5
 LOG_PATH="${HOME}/logs"
 LOG_FILE="${LOG_PATH}/mon.log"
+PID_FILE="${LOG_PATH}/.mon_pid"
+CUT_TIME="00:00:00"
 DISK_PATH=""
 
 log_echo()
@@ -17,14 +19,11 @@ log_echo()
 
 log_to_file()
 {
-    if test ! -e ${LOG_PATH}; then
-        mkdir -p ${LOG_PATH}
-    fi
     log_text=$1
     datetime=$(date +'%Y-%m-%d %H:%M:%S')
-    date_str=$(echo $datetime | cut -c 1-10)
     time_str=$(echo $datetime | cut -c 12-20)
-    if [ "${time_str}x" = "00:00:00x" ]; then
+    if [ "${time_str}x" = "${CUT_TIME}x" ]; then
+        date_str=$(echo $datetime | cut -c 1-10)
         mv ${LOG_FILE} ${LOG_FILE}_${date_str}
     fi
     echo "$datetime,$log_text" >> ${LOG_FILE}
@@ -85,11 +84,13 @@ start_mon()
 
 stop_mon()
 {
-    pid=$(cat ${LOG_PATH}/.mon_pid)
-    if [ ${pwd} > 0 ]; then
-        kill -9 $pwd
+    if [ -e ${PID_FILE} ]; then
+        pid=$(cat ${PID_FILE})
+        kill -9 $pid
+        [ $? -eq 0 ] && log_echo "script stop success"
+        rm ${PID_FILE}
     else
-        log_echo "script not start"
+        log_echo "pid file not exist, maybe the script not start"
     fi
 }
 
@@ -102,11 +103,15 @@ echo_usage()
 
 main()
 {
+    if test ! -e ${LOG_PATH}; then
+        mkdir -p ${LOG_PATH}
+    fi
+
     input=$@
     case "$input" in
         start)
             start_mon &
-            echo $$
+            echo $! > ${PID_FILE}
             ;;
         stop)
             stop_mon
