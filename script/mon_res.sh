@@ -2,13 +2,15 @@
 # Date: 2022-05-01
 # Desc: monitor host resource usage
 
-# Configuration
+# CONFIG START
 TIME_INTERVAL=5
 LOG_PATH="${HOME}/logs"
+DISK_PATH="/"
+# CONFIG END
+
+CUT_TIME="00:00:00"
 LOG_FILE="${LOG_PATH}/mon.log"
 PID_FILE="${LOG_PATH}/.mon_pid"
-CUT_TIME="00:00:00"
-DISK_PATH=""
 
 log_echo()
 {
@@ -31,8 +33,8 @@ log_to_file()
 
 get_cpu_usage()
 {
-#CPU时间计算公式：CPU_TIME=user+system+nice+idle+iowait+irq+softirq
-#CPU使用率计算公式：cpu_usage=(idle2-idle1)/(cpu2-cpu1)*100
+# CPU_TIME=user+system+nice+idle+iowait+irq+softirq
+# cpu_usage=(idle2-idle1)/(cpu2-cpu1)*100
 
 LAST_CPU_INFO=$(cat /proc/stat | grep -w cpu | awk '{print $2,$3,$4,$5,$6,$7,$8}')
 LAST_SYS_IDLE=$(echo "$LAST_CPU_INFO" | awk '{print $4}')
@@ -56,22 +58,19 @@ get_mem_usage()
     used_mem=$(free -m| awk 'NR==2{print $3}')
     total_mem=$(free -m| awk 'NR==2{print $2}')
     MEM_USAGE=$(echo "$used_mem" "$total_mem" | awk '{printf "%.2f%",$1/$2*100}')
-    echo "$MEM_USAGE"
+    echo "$used_mem/$total_mem($MEM_USAGE)"
 }
 
 get_disk_usage()
 {
     [ "$DISK_PATH" = "" ] && DISK_PATH=$(pwd)
-    disk_usage=$(df "${DISK_PATH}"| sed -n '2p'|awk '{print $5'})
+    disk_usage=$(df -h | awk -v path="${DISK_PATH}" '$NF==path{printf "%s/%s(%.0f%%)\n", $3,$2,$5}')
     echo "$disk_usage"
 }
 
 mon_res()
 {
-CPU_USAGE=$(get_cpu_usage)
-MEM_USAGE=$(get_mem_usage)
-DISK_USAGE=$(get_disk_usage)
-log_to_file "$CPU_USAGE,$MEM_USAGE,$DISK_USAGE"
+log_to_file "$(get_cpu_usage)","$(get_mem_usage)","$(get_disk_usage)"
 }
 
 start_mon()
@@ -111,7 +110,7 @@ main()
     case "$input" in
         start)
             start_mon &
-            echo $! > ${PID_FILE}
+            echo $! > "${PID_FILE}"
             ;;
         stop)
             stop_mon
