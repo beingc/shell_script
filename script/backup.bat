@@ -10,6 +10,10 @@ set month=%date:~5,2%
 set day=%date:~8,2%
 set datestr=%year%%month%%day%
 
+REM 创建备份目录
+if not exist "%backup_dir%" mkdir "%backup_dir%"
+if not exist "%backup_dir%\\%datestr%" mkdir "%backup_dir%\\%datestr%"
+
 REM 获取当前脚本所在目录
 set dirname=%~dp0
 set dirname=%dirname:~0,-1%
@@ -17,7 +21,7 @@ set dirname=%dirname:\\=\\\\%
 
 REM 压缩当前目录并移动到备份目录
 "C:\\Program Files\\7-Zip\\7z.exe" a -t7z "%dirname%_%datestr%.7z" "%dirname%" -mx9
-move "%dirname%_%datestr%.7z" "%backup_dir%"
+move "%dirname%_%datestr%.7z" "%backup_dir%\\%datestr%"
 
 echo "Backup completed"
 
