@@ -48,7 +48,7 @@ NEXT_TOTAL_CPU_T=$(echo "$NEXT_CPU_INFO" | awk '{print $1+$2+$3+$4+$5+$6+$7}')
 
 SYSTEM_IDLE=$(echo "${NEXT_SYS_IDLE}" "${LAST_SYS_IDLE}" | awk '{print $1-$2}')
 TOTAL_TIME=$(echo "${NEXT_TOTAL_CPU_T}" "${LAST_TOTAL_CPU_T}" | awk '{print $1-$2}')
-CPU_USAGE=$(echo "${SYSTEM_IDLE}" "${TOTAL_TIME}" | awk '{printf "%.2f%", 100-$1/$2*100}')
+CPU_USAGE=$(echo "${SYSTEM_IDLE}" "${TOTAL_TIME}" | awk '{printf "%.2f%%", 100-$1/$2*100}')
 
 echo "${CPU_USAGE}"
 }
@@ -57,7 +57,7 @@ get_mem_usage()
 {
     used_mem=$(free -m| awk 'NR==2{print $3}')
     total_mem=$(free -m| awk 'NR==2{print $2}')
-    MEM_USAGE=$(echo "$used_mem" "$total_mem" | awk '{printf "%.2f%",$1/$2*100}')
+    MEM_USAGE=$(echo "$used_mem" "$total_mem" | awk '{printf "%.2f%%",$1/$2*100}')
     echo "$used_mem/$total_mem($MEM_USAGE)"
 }
 
