@@ -5,6 +5,7 @@ temp/
 .vscode/
 .idea/
 *.swp
+*.code-workspace
 
 # Ignore log files
 *.log
